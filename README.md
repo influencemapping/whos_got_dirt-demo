@@ -2,14 +2,29 @@
 
 [Try it.](http://influencemapping.github.io/whos_got_dirt-demo/)
 
-## Getting Started
+## Development
+
+Update components:
 
 ```
 npm install -g component
 component install
 ```
 
-## Development
+Build assets manually:
+
+```
+component build
+```
+
+Build assets automatically:
+
+```
+npm install grunt-contrib-watch --save-dev
+grunt
+```
+
+Update ISO 3166-1 alpha-2 codes:
 
 ```
 bundle

@@ -3,6 +3,5 @@
   "dependencies": {
     "manuelstofer/json-pointer": "*"
   },
-  "scripts": ["index.js"],
-  "styles": ["index.css"]
+  "scripts": ["index.js"]
 }
