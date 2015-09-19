@@ -1,0 +1,8 @@
+{
+  "name": "whos_got_dirt-demo",
+  "dependencies": {
+    "manuelstofer/json-pointer": "*"
+  },
+  "scripts": ["index.js"],
+  "styles": ["index.css"]
+}
