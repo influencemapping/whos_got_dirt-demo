@@ -8,11 +8,12 @@ jQuery(function($) {
       '</select>';
     }
     else {
-      return '<input name="operator[]" type="hidden" value="' + field_operators[field][0] + '"><div>' + operators[field_operators[field][0]] + '</div>';
+      return '<input name="operator[]" type="hidden" value="' + field_operators[field][0] + '">' +
+        '<div>' + operators[field_operators[field][0]] + '</div>';
     }
   }
 
-  // @todo display hint for |= about | delimiter
+  // @todo Display hint for "|=" operator about using "|" delimiter.
   function value(field) {
     var attributes = ' class="form-control" name="value[]"';
 
@@ -34,10 +35,9 @@ jQuery(function($) {
           }).join('') +
         + '</select>';
       }
-      // @todo https://eternicode.github.io/bootstrap-datepicker/
-      // else if (field_formats[field]) {
-      //   return '';
-      // }
+      else if (field_formats[field]) {
+        return '<input class="form-control date" name="value[]" type="text">';
+      }
       else {
         return '<input' + attributes + ' type="text">';
       }
@@ -79,51 +79,34 @@ jQuery(function($) {
   }
 
   function render(data) {
-    // @todo
     var results = data['q0']['result'];
-    console.log(results);
-    $('#results').append(
-        '<div class="panel panel-default">' +
-          '<div class="panel-heading">Results</div>'+
 
-            '<table class="table table-bordered table-striped">' +
-                '<tr>' +
-                    '<td>Entity</td>' +
-                    '<td>Memberships</td>' +
-                '</tr>' +
+    $('#results').show();
+    $('#results tbody').html(
+      $.map(results, function(result) {
+        if(result['contact_details'].length > 1) {
 
-                $.map(results, function(result) {
-                    console.log(result);
-
-                    if(result['contact_details'].length > 1) {
-
-                    }
-                    return '<tr class='+ result['@type'] + '>' +
-                        '<td>' + '<a href="' + result['links'][0]['url'] + '" title="' + result['links'][0]['note'] + '"' + '>' + result['name'] + '</a></td>' +
-
-                        '<td>' +
-                        $.map(result['memberships'], function(membership){
-                            var mems = $.map(membership, function(label, field) {
-                                            var items = '';
-                                            if($.type(label) === "array") {
-
-                                                items = '<dt>' + field + '</dt>' +
-                                                        '<dd>' +  label + '</dd>';
-                                            } else {
-                                                items = '<dt>' + field + '</dt>' +
-                                                        '<dd>' +  label + '</dd>';
-                                            }
-
-                                            return items;
-                                        }).join('');
-                            return '<dl class="dl-horizontal">' + mems + '</dl>';
-                        }).join('') +
-                        '</td>' +
-                    '</tr>'
-                }).join('') +
-            '</table>' +
-            '</div>'
-
+        }
+        return '<tr class='+ result['@type'] + '>' +
+          '<td>' + '<a href="' + result['links'][0]['url'] + '" title="' + result['links'][0]['note'] + '"' + '>' + result['name'] + '</a></td>' +
+          '<td>' +
+          $.map(result['memberships'], function(membership){
+            var mems = $.map(membership, function(label, field) {
+                var items = '';
+                if($.type(label) === "array") {
+                  items = '<dt>' + field + '</dt>' +
+                    '<dd>' +  label + '</dd>';
+                } else {
+                  items = '<dt>' + field + '</dt>' +
+                    '<dd>' +  label + '</dd>';
+                }
+                return items;
+              }).join('');
+            return '<dl class="dl-horizontal">' + mems + '</dl>';
+          }).join('') +
+          '</td>' +
+        '</tr>'
+      }).join('')
     );
   }
 
@@ -131,6 +114,7 @@ jQuery(function($) {
     var field = $(this).val();
     $(this).parents('.row').find('.operator').html(operator(field));
     $(this).parents('.row').find('.value').html(value(field));
+    $(this).parents('.row').find('.date').datepicker();
   });
   $(document).on('click', '.remove', function () {
     $(this).parents('.row').remove();
@@ -142,42 +126,59 @@ jQuery(function($) {
   $('#form').submit(function (event) {
     var controls = $(this).serializeArray();
     var query = {type: 'Person'};
+    var membership = {};
 
     for (var i = 0, l = controls.length; i < l; i += 3) {
       var field = controls[i].value;
       var operator = controls[i + 1].value;
+      var value = controls[i + 2].value;
+      var field_with_operator = field;
 
       if (operator !== '=') {
-        field += operator;
+        field_with_operator += operator;
       }
 
-      switch (controls[i].value) {
+      if (field_types[field] == 'boolean') {
+        value = value === 'false' ? false : true;
+      }
+
+      switch (field) {
       case 'address':
-        // @todo add nested query
+        query.contact_details = [{
+          'type': 'address',
+          'value~=': '52 London'
+        }];
         break;
+      case 'inactive':
       case 'role':
-        // @todo add nested query
+        membership[field_with_operator] = value;
         break;
       default:
-        query[field] = controls[i + 2].value;
+        query[field_with_operator] = value;
       }
     }
 
-    var parameters = {
-      queries: JSON.stringify({
-        q0: {
-          query: query
-        }
-      })
-    };
+    if (membership) {
+      query.memberships = [membership];
+    }
 
-    $.getJSON('http://whosgotdirt.herokuapp.com/people', parameters, function (data) {
+    var json = JSON.stringify({
+      q0: {
+        query: query
+      }
+    });
+
+    console.log(json);
+
+    $.getJSON('http://whosgotdirt.herokuapp.com/people', {queries: json}, function (data) {
       render(data);
-    })
+    });
 
     event.preventDefault();
   });
 
+  // Setup page.
+  $('#results').hide();
   addField();
 });
 
