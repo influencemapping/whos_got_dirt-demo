@@ -80,17 +80,22 @@ jQuery(function($) {
 
                         '<td>' +
                         $.map(result['memberships'], function(membership){
-                            return $.map(membership, function(label, field) {
-                                return '<dl class="dl-horizontal">' +
-                                            '<dt>' + field + '</dt>' +
-                                            '<dd>' +  label + '</dd>' +
-                                        '</dl>';
-                            }).join('');
+                            var mems = $.map(membership, function(label, field) {
+                                            var items = '';
+                                            if($.type(label) === "array") {
+
+                                                items = '<dt>' + field + '</dt>' +
+                                                        '<dd>' +  label + '</dd>';
+                                            } else {
+                                                items = '<dt>' + field + '</dt>' +
+                                                        '<dd>' +  label + '</dd>';
+                                            }
+
+                                            return items;
+                                        }).join('');
+                            return '<dl class="dl-horizontal">' + mems + '</dl>';
                         }).join('') +
-
-                        '</td>'
-
-
+                        '</td>' +
                     '</tr>'
                 }).join('') +
             '</table>' +
