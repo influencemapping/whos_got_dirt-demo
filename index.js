@@ -79,6 +79,14 @@ jQuery(function($) {
                         '<td>' + '<a href="' + result['links'][0]['url'] + '" title="' + result['links'][0]['note'] + '"' + '>' + result['name'] + '</a></td>' +
 
                         '<td>' +
+                        $.map(result['memberships'], function(membership){
+                            return $.map(membership, function(label, field) {
+                                return '<dl class="dl-horizontal">' +
+                                            '<dt>' + field + '</dt>' +
+                                            '<dd>' +  label + '</dd>' +
+                                        '</dl>';
+                            }).join('');
+                        }).join('') +
 
                         '</td>'
 
