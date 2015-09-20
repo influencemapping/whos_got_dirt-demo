@@ -381,20 +381,24 @@ jQuery(function($) {
       '</select>';
     }
     else {
-      return '<input name="operator[]" type="hidden"><div>' + operators[field_operators[field][0]] + '</div>';
+      return '<input name="operator[]" type="hidden" value="' + field_operators[field][0] + '"><div>' + operators[field_operators[field][0]] + '</div>';
     }
   }
 
+  // @todo display hint for |= about | delimiter
   function value(field) {
-    attributes = ' class="form-control" name="value[]"';
+    var attributes = ' class="form-control" name="value[]"';
+
     switch (field_types[field]) {
     case 'integer':
       return '<input' + attributes + ' type="number" min="0" step="1">';
+
     case 'boolean':
       return '<select' + attributes + '>' +
         '<option value="false">False</option>' +
         '<option value="true">True</option>' +
       + '</select>';
+
     default:
       if (field_valid_values[field]) {
         return '<select' + attributes + '>' +
@@ -448,6 +452,7 @@ jQuery(function($) {
   }
 
   function render(data) {
+    // @todo
     var results = data['q0']['result'];
     console.log(results);
     $('#results').append(
@@ -463,7 +468,7 @@ jQuery(function($) {
           return '<tr class='+ result['@type'] + '>' +
             '<td>' + '<a href="' + result['links'][0]['url'] + '" title="' + result['links'][0]['note'] + '"' + '>' + result['name'] + '</a></td>' +
             '<td>' +
-            '</td>'
+            '</td>' +
           '</tr>'
         }).join('') +
       '</table>'
@@ -484,15 +489,41 @@ jQuery(function($) {
 
   $('#form').submit(function (event) {
     var controls = $(this).serializeArray();
-    var query = {};
-    for (var i = 0, l = controls.length; i < l; i += 3) {
+    var query = {type: 'Person'};
 
+    for (var i = 0, l = controls.length; i < l; i += 3) {
+      var field = controls[i].value;
+      var operator = controls[i + 1].value;
+
+      if (operator !== '=') {
+        field += operator;
+      }
+
+      switch (controls[i].value) {
+      case 'address':
+        // @todo add nested query
+        break;
+      case 'role':
+        // @todo add nested query
+        break;
+      default:
+        query[field] = controls[i + 2].value;
+      }
     }
+
+    var parameters = {
+      queries: JSON.stringify({
+        q0: {
+          query: query
+        }
+      })
+    };
+
+    $.getJSON('http://whosgotdirt.herokuapp.com/people', parameters, function (data) {
+      render(data);
+    })
+
     event.preventDefault();
-    // @todo
-    // $.getJSON('http://whosgotdirt.herokuapp.com/people?queries={%22q0%22:{%22query%22:{%22type%22:%22Person%22,%22name%22:%22John%22}}}', function (data) {
-    //   render(data);
-    // });
   });
 
   addField();
