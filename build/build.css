@@ -1,3 +1,7 @@
+#filters .row {
+  margin-bottom: 15px;
+}
+
 .operator div {
   padding: 7px 17px;
 }

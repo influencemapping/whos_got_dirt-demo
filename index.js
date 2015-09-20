@@ -13,8 +13,7 @@ jQuery(function($) {
   }
 
   function value(field) {
-    // @todo use field_valid_values, field_formats
-    attributes = ' class="form-control value" name="value[]"';
+    attributes = ' class="form-control" name="value[]"';
     switch (field_types[field]) {
     case 'integer':
       return '<input' + attributes + ' type="number" min="0" step="1">';
@@ -24,34 +23,55 @@ jQuery(function($) {
         '<option value="true">True</option>' +
       + '</select>';
     default:
-      return '<input' + attributes + ' type="text">';
+      if (field_valid_values[field]) {
+        return '<select' + attributes + '>' +
+          $.map(field_valid_values[field], function(row) {
+            return '<option value="' + row[0] + '">' + row[1] + '</option>';
+          }).join('') +
+        + '</select>';
+      }
+      // @todo https://eternicode.github.io/bootstrap-datepicker/
+      // else if (field_formats[field]) {
+      //   return '';
+      // }
+      else {
+        return '<input' + attributes + ' type="text">';
+      }
     }
   }
 
   function addField() {
-    $('#form').append(
-      '<div class="form-group">' +
-        '<div class="col-sm-2">' +
-          '<select class="form-control field" name="field[]">' +
-            $.map(fields, function(label, field) {
-              return '<option value="' + field + '">' + label + '</option>';
-            }).join('') +
-          '</select>' +
-        '</div>' +
-        '<div class="col-sm-2 operator">' +
-          operator('name') +
-        '</div>' +
-        '<div class="col-sm-7">' +
-          value('name') +
-        '</div>' +
-        '<div class="col-sm-1">' +
+    $('#filters').append(
+      '<div class="row">' +
+        '<div class="form-group">' +
+          '<div class="col-sm-2">' +
+            '<select class="form-control field" name="field[]">' +
+              $.map(fields, function(label, field) {
+                return '<option value="' + field + '">' + label + '</option>';
+              }).join('') +
+            '</select>' +
+          '</div>' +
+          '<div class="col-sm-2 operator">' +
+            operator('name') +
+          '</div>' +
+          '<div class="col-sm-7 value">' +
+            value('name') +
+          '</div>' +
+          '<div class="col-sm-1">' +
+            (function () {
+              if ($('#filters .row').length) {
+                return '<button type="button" class="btn btn-default remove" aria-label="Remove Filter">' +
+                  '<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>' +
+                '</button>';
+              }
+              else {
+                return '';
+              }
+            })() +
+          '</div>' +
         '</div>' +
       '</div>'
     );
-  }
-
-  function removeField() {
-    // @todo
   }
 
   function render(data) {
@@ -61,14 +81,28 @@ jQuery(function($) {
 
   $(document).on('change', '.field', function () {
     var field = $(this).val();
-    $(this).parents('.form-group').find('.operator').html(operator(field));
+    $(this).parents('.row').find('.operator').html(operator(field));
+    $(this).parents('.row').find('.value').html(value(field));
+  });
+  $(document).on('click', '.remove', function () {
+    $(this).parents('.row').remove();
+  });
+  $('#add').click(function () {
+    addField();
   });
 
-  $.getJSON('http://whosgotdirt.herokuapp.com/people?queries={%22q0%22:{%22query%22:{%22type%22:%22Person%22,%22name%22:%22John%22}}}', function (data) {
-    render(data);
-  });
+  $('#form').submit(function (event) {
+    var controls = $(this).serializeArray();
+    var query = {};
+    for (var i = 0, l = controls.length; i < l; i += 3) {
 
-  // @todo events for add/remove buttons
+    }
+    event.preventDefault();
+    // @todo
+    // $.getJSON('http://whosgotdirt.herokuapp.com/people?queries={%22q0%22:{%22query%22:{%22type%22:%22Person%22,%22name%22:%22John%22}}}', function (data) {
+    //   render(data);
+    // });
+  });
 
   addField();
 });
