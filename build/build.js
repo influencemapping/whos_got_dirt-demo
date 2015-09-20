@@ -456,22 +456,47 @@ jQuery(function($) {
     var results = data['q0']['result'];
     console.log(results);
     $('#results').append(
-      '<table>' +
-        '<tr>' +
-          '<td>Entity</td>' +
-          '<td>Memberships</td>' +
-        '</tr>' +
-        $.map(results, function(result) {
-          console.log(result);
-          if(result['contact_details'].length > 1) {
-          }
-          return '<tr class='+ result['@type'] + '>' +
-            '<td>' + '<a href="' + result['links'][0]['url'] + '" title="' + result['links'][0]['note'] + '"' + '>' + result['name'] + '</a></td>' +
-            '<td>' +
-            '</td>' +
-          '</tr>'
-        }).join('') +
-      '</table>'
+        '<div class="panel panel-default">' +
+          '<div class="panel-heading">Results</div>'+
+
+            '<table class="table table-bordered table-striped">' +
+                '<tr>' +
+                    '<td>Entity</td>' +
+                    '<td>Memberships</td>' +
+                '</tr>' +
+
+                $.map(results, function(result) {
+                    console.log(result);
+
+                    if(result['contact_details'].length > 1) {
+
+                    }
+                    return '<tr class='+ result['@type'] + '>' +
+                        '<td>' + '<a href="' + result['links'][0]['url'] + '" title="' + result['links'][0]['note'] + '"' + '>' + result['name'] + '</a></td>' +
+
+                        '<td>' +
+                        $.map(result['memberships'], function(membership){
+                            var mems = $.map(membership, function(label, field) {
+                                            var items = '';
+                                            if($.type(label) === "array") {
+
+                                                items = '<dt>' + field + '</dt>' +
+                                                        '<dd>' +  label + '</dd>';
+                                            } else {
+                                                items = '<dt>' + field + '</dt>' +
+                                                        '<dd>' +  label + '</dd>';
+                                            }
+
+                                            return items;
+                                        }).join('');
+                            return '<dl class="dl-horizontal">' + mems + '</dl>';
+                        }).join('') +
+                        '</td>' +
+                    '</tr>'
+                }).join('') +
+            '</table>' +
+            '</div>'
+
     );
   }
 
