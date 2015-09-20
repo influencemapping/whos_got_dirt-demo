@@ -1,83 +1,115 @@
-jQuery(function($) {
-  function operator(field) {
+jQuery(function ($) {
+  // Returns the HTML for selecting a field's operator.
+  //
+  // @param {string} field The field's name.
+  // @return {string} The HTML for selecting a field's operator.
+  function operatorTemplate(field) {
+    // Multiple operators.
     if (field_operators[field].length > 1) {
       return '<select class="form-control" name="operator[]">' +
-        $.map(field_operators[field], function(operator) {
+        $.map(field_operators[field], function (operator) {
           return '<option value="' + operator + '">' + operators[operator] + '</option>';
         }).join('') +
       '</select>';
     }
+    // Single operator.
     else {
       return '<input name="operator[]" type="hidden" value="' + field_operators[field][0] + '">' +
         '<div>' + operators[field_operators[field][0]] + '</div>';
     }
   }
 
-  // @todo Display hint for "|=" operator about using "|" delimiter.
-  function value(field) {
-    var attributes = ' class="form-control" name="value[]"';
+  // Returns the HTML for entering a field's value.
+  //
+  // @param {string} field The field's name.
+  // @param {string} [operator] The field's operator.
+  // @param {string} [value] The field's value.
+  // @return {string} The HTML for entering a field's value.
+  function valueTemplate(field, operator, value) {
+    var attributes = value ? ' value="' + value + '"' : '';
 
     switch (field_types[field]) {
     case 'integer':
-      return '<input' + attributes + ' type="number" min="0" step="1">';
+      return '<input class="form-control" name="value[]" type="number" min="0" step="1"' + attributes + '>';
 
     case 'boolean':
-      return '<select' + attributes + '>' +
+      return '<select class="form-control" name="value[]">' +
         '<option value="false">False</option>' +
         '<option value="true">True</option>' +
-      + '</select>';
+      '</select>';
 
     default:
-      if (field_valid_values[field]) {
-        return '<select' + attributes + '>' +
-          $.map(field_valid_values[field], function(row) {
+      // Code list.
+      if (field_valid_values[field] && operator !== '|=') {
+        return '<select class="form-control" name="value[]">' +
+          $.map(field_valid_values[field], function (row) {
             return '<option value="' + row[0] + '">' + row[1] + '</option>';
           }).join('') +
-        + '</select>';
+        '</select>';
       }
+      // Date picker.
       else if (field_formats[field]) {
-        return '<input class="form-control date" name="value[]" type="text">';
+        return '<input class="form-control date" name="value[]" type="text"' + attributes + '>';
       }
+      // Default.
       else {
-        return '<input' + attributes + ' type="text">';
+        return '<input class="form-control" name="value[]" type="text"' + attributes + '>';
       }
     }
   }
 
+  // Appends a new filter.
   function addField() {
     $('#filters').append(
       '<div class="row">' +
         '<div class="form-group">' +
           '<div class="col-sm-2">' +
             '<select class="form-control field" name="field[]">' +
-              $.map(fields, function(label, field) {
+              $.map(fields, function (label, field) {
                 return '<option value="' + field + '">' + label + '</option>';
               }).join('') +
             '</select>' +
           '</div>' +
           '<div class="col-sm-2 operator">' +
-            operator('name') +
+            operatorTemplate('name') +
           '</div>' +
           '<div class="col-sm-7 value">' +
-            value('name') +
+            valueTemplate('name') +
           '</div>' +
           '<div class="col-sm-1">' +
-            (function () {
-              if ($('#filters .row').length) {
-                return '<button type="button" class="btn btn-default remove" aria-label="Remove Filter">' +
-                  '<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>' +
-                '</button>';
-              }
-              else {
-                return '';
-              }
-            })() +
+            ($('#filters .row').length ?
+              '<button type="button" class="btn btn-default remove" aria-label="Remove Filter">' +
+                '<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>' +
+              '</button>' : '') +
           '</div>' +
         '</div>' +
       '</div>'
     );
   }
 
+  // Renders the JSON response.
+  //
+  // @param {Object} data The JSON response.
+  function render(data) {
+    var results = data['q0']['result'];
+
+    var html = $.map(results, function (result) {
+      return '<tr class="'+ result['@type'] + '">' +
+        '<td>' +
+          recurse(result) +
+        '</td>' +
+      '</tr>';
+    }).join('');
+
+    $('#number').html(data['q0']['result'].length);
+    $('#count').html(data['q0']['count']);
+    $('#results').show();
+    $('#results tbody').html(html);
+  }
+
+  // Renders an arbitrary object or primitive.
+  //
+  // @param {Array.,Object,boolean,number,string} data an object or primitive
   function recurse(data) {
     if (Object.prototype.toString.call(data) === '[object Array]') {
       return $.map(data, function (item) {
@@ -85,13 +117,19 @@ jQuery(function($) {
       }).join('');
     }
     else if (typeof data === 'object') {
+      // Link.
       if (data.url && data.note) {
         return '<a href="' + data.url + '">' + data.note + '</a>';
+      }
+      // Identifier.
+      else if (data.identifier && data.scheme) {
+        return data.identifier + '(' + data.scheme + ')';
       }
       else {
         return '<dl>' +
           $.map(data, function (value, field) {
-            return '<dt>' + field + '</dt><dd>' + recurse(value) + '</dd>';
+            return '<dt>' + field + '</dt>' +
+              '<dd>' + recurse(value) + '</dd>';
           }).join('') +
         '</dl>';
       }
@@ -101,30 +139,34 @@ jQuery(function($) {
     }
   }
 
-  function render(data) {
-    var results = data['q0']['result'];
-
-    $('#results').show();
-    $('#results tbody').html(
-      $.map(results, function(result) {
-        return '<tr class="'+ result['@type'] + '">' +
-          '<td>' +
-            recurse(result) +
-          '</td>' +
-        '</tr>'
-      }).join('')
-    );
-  }
-
+  // Add event handlers.
   $(document).on('change', '.field', function () {
     var field = $(this).val();
-    $(this).parents('.row').find('.operator').html(operator(field));
-    $(this).parents('.row').find('.value').html(value(field));
-    $(this).parents('.row').find('.date').datepicker();
+    var $row = $(this).parents('.row');
+    var $value = $(this).parents('.row').find('.value');
+    var value = $value.find('input, select').val();
+
+    $row.find('.operator').html(operatorTemplate(field));
+    $value.html(valueTemplate(field, field_operators[field][0], value));
+    $row.find('.date').datepicker();
   });
+
+  $(document).on('change', '.operator select', function () {
+    var operator = $(this).val();
+    var field = $(this).parents('.row').find('.field').val();
+    var $value = $(this).parents('.row').find('.value');
+    var value = $value.find('input, select').val();
+
+    $value.html(valueTemplate(field, operator, value));
+    if (operator === '|=') {
+      $value.append('<span class="help-block">The "is one of" operator accepts a pipe-separated list: for example, <kbd>gb|ie</kbd>.</span>');
+    }
+  });
+
   $(document).on('click', '.remove', function () {
     $(this).parents('.row').remove();
   });
+
   $('#add').click(function () {
     addField();
   });
@@ -134,6 +176,7 @@ jQuery(function($) {
     var query = {type: 'Person'};
     var membership = {};
 
+    // Build the query.
     for (var i = 0, l = controls.length; i < l; i += 3) {
       var field = controls[i].value;
       var operator = controls[i + 1].value;
@@ -144,15 +187,17 @@ jQuery(function($) {
         field_with_operator += operator;
       }
 
-      if (field_types[field] == 'boolean') {
+      if (field_types[field] === 'boolean') {
         value = value === 'false' ? false : true;
       }
 
+      // @todo Special casing nested fields will get long and complicated. This
+      // should be replaced with a universal solution using some configuration.
       switch (field) {
       case 'address':
         query.contact_details = [{
           'type': 'address',
-          'value~=': '52 London'
+          'value~=': value
         }];
         break;
       case 'inactive':
@@ -164,17 +209,16 @@ jQuery(function($) {
       }
     }
 
-    if (membership) {
+    if (!$.isEmptyObject(membership)) {
       query.memberships = [membership];
     }
 
+    // Send the request.
     var json = JSON.stringify({
       q0: {
         query: query
       }
     });
-
-    console.log(json);
 
     $.getJSON('http://whosgotdirt.herokuapp.com/people', {queries: json}, function (data) {
       render(data);
@@ -183,7 +227,7 @@ jQuery(function($) {
     event.preventDefault();
   });
 
-  // Setup page.
+  // Setup the page.
   $('#results').hide();
   addField();
 });
