@@ -75,8 +75,26 @@ jQuery(function($) {
   }
 
   function render(data) {
-    // Annabel
-    console.log(data);
+    var results = data['q0']['result'];
+    console.log(results);
+    $('#results').append(
+      '<table>' +
+        '<tr>' +
+          '<td>Entity</td>' +
+          '<td>Memberships</td>' +
+        '</tr>' +
+        $.map(results, function(result) {
+          console.log(result);
+          if(result['contact_details'].length > 1) {
+          }
+          return '<tr class='+ result['@type'] + '>' +
+            '<td>' + '<a href="' + result['links'][0]['url'] + '" title="' + result['links'][0]['note'] + '"' + '>' + result['name'] + '</a></td>' +
+            '<td>' +
+            '</td>'
+          '</tr>'
+        }).join('') +
+      '</table>'
+    );
   }
 
   $(document).on('change', '.field', function () {
