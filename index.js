@@ -52,13 +52,49 @@ jQuery(function($) {
 
   function removeField() {
     // @todo
+
   }
 
   function render(data) {
     // Annabel
-    console.log(data);
+    var results = data['q0']['result'];
+    console.log(results);
+    $('#results').append(
+        '<table>' +
+            '<tr>' +
+                '<td>Entity</td>' +
+                '<td>Memberships</td>' +
+            '</tr>' +
+
+            $.map(results, function(result) {
+                console.log(result);
+
+                if(result['contact_details'].length > 1) {
+
+                }
+                return '<tr class='+ result['@type'] + '>' +
+                    '<td>' + '<a href="' + result['links'][0]['url'] + '" title="' + result['links'][0]['note'] + '"' + '>' + result['name'] + '</a></td>' +
+
+                    '<td>' +
+
+                    '</td>'
+
+
+                '</tr>'
+            }).join('') +
+        '</table>'
+    );
   }
 
+
+// contact_details: Array[0]
+// identifiers: Array[1]
+// jurisdiction_code: "ca_qc"
+// links: Array[1]
+// memberships: Array[1]
+// sources: Array[1]
+// updated_at: "2015-06-08T23:50:22+00:00"
+// __proto__: Object
   $(document).on('change', '.field', function () {
     var field = $(this).val();
     $(this).parents('.form-group').find('.operator').html(operator(field));
