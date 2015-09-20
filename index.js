@@ -60,29 +60,34 @@ jQuery(function($) {
     var results = data['q0']['result'];
     console.log(results);
     $('#results').append(
-        '<table>' +
-            '<tr>' +
-                '<td>Entity</td>' +
-                '<td>Memberships</td>' +
-            '</tr>' +
+        '<div class="panel panel-default">' +
+          '<div class="panel-heading">Results</div>'+
 
-            $.map(results, function(result) {
-                console.log(result);
+            '<table class="table table-bordered table-striped">' +
+                '<tr>' +
+                    '<td>Entity</td>' +
+                    '<td>Memberships</td>' +
+                '</tr>' +
 
-                if(result['contact_details'].length > 1) {
+                $.map(results, function(result) {
+                    console.log(result);
 
-                }
-                return '<tr class='+ result['@type'] + '>' +
-                    '<td>' + '<a href="' + result['links'][0]['url'] + '" title="' + result['links'][0]['note'] + '"' + '>' + result['name'] + '</a></td>' +
+                    if(result['contact_details'].length > 1) {
 
-                    '<td>' +
+                    }
+                    return '<tr class='+ result['@type'] + '>' +
+                        '<td>' + '<a href="' + result['links'][0]['url'] + '" title="' + result['links'][0]['note'] + '"' + '>' + result['name'] + '</a></td>' +
 
-                    '</td>'
+                        '<td>' +
+
+                        '</td>'
 
 
-                '</tr>'
-            }).join('') +
-        '</table>'
+                    '</tr>'
+                }).join('') +
+            '</table>' +
+            '</div>'
+
     );
   }
 
