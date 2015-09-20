@@ -13,6 +13,7 @@ jQuery(function($) {
   }
 
   function value(field) {
+    // @todo use field_valid_values, field_formats
     attributes = ' class="form-control value" name="value[]"';
     switch (field_types[field]) {
     case 'integer':
@@ -47,17 +48,27 @@ jQuery(function($) {
         '</div>' +
       '</div>'
     );
-    // @todo buttons to add/remove field
   }
 
   function removeField() {
     // @todo
   }
 
+  function render(data) {
+    // Annabel
+    console.log(data);
+  }
+
   $(document).on('change', '.field', function () {
     var field = $(this).val();
     $(this).parents('.form-group').find('.operator').html(operator(field));
   });
+
+  $.getJSON('http://whosgotdirt.herokuapp.com/people?queries={%22q0%22:{%22query%22:{%22type%22:%22Person%22,%22name%22:%22John%22}}}', function (data) {
+    render(data);
+  });
+
+  // @todo events for add/remove buttons
 
   addField();
 });
@@ -95,11 +106,11 @@ var field_types = {
   'inactive': 'boolean'
 };
 
-var field_formats = { // @todo use
+var field_formats = {
   'birth_date': 'date'
 };
 
-var field_valid_values = { // @todo use
+var field_valid_values = {
   'jurisdiction_code': [
     ["af", "Afghanistan"],
     ["ax", "ÅLand Islands"],
