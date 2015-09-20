@@ -79,7 +79,26 @@ jQuery(function($) {
   }
 
   function recurse(data) {
-
+    if (Object.prototype.toString.call(data) === '[object Array]') {
+      return $.map(data, function (item) {
+        return recurse(item);
+      }).join('');
+    }
+    else if (typeof data === 'object') {
+      if (data.url && data.note) {
+        return '<a href="' + data.url + '">' + data.note + '</a>';
+      }
+      else {
+        return '<dl>' +
+          $.map(data, function (value, field) {
+            return '<dt>' + field + '</dt><dd>' + recurse(value) + '</dd>';
+          }).join('') +
+        '</dl>';
+      }
+    }
+    else {
+      return data;
+    }
   }
 
   function render(data) {
@@ -88,40 +107,9 @@ jQuery(function($) {
     $('#results').show();
     $('#results tbody').html(
       $.map(results, function(result) {
-        if(result['contact_details'].length > 1) {
-
-        }
         return '<tr class="'+ result['@type'] + '">' +
           '<td>' +
-            '<a href="' + result['links'][0]['url'] + '" title="' + result['links'][0]['note'] + '"' + '>' +
-              result['name'] +
-            '</a>' +
-          '</td>' +
-          '<td>' +
-            $.map(result['memberships'], function (membership) {
-              return '<dl class="dl-horizontal">' +
-                $.map(membership, function (value, field) {
-                  var prefix = '<dt>' + field + '</dt><dd>';
-                  var suffix = '</dd>';
-
-                  if (Object.prototype.toString.call(value) === '[object Array]') {
-                    return 'TO DO';
-                  }
-                  else if (typeof value === 'object') {
-                    return prefix +
-                        '<dl class="dl-horizontal">' +
-                          $.map(value, function (v, f) {
-                            return '<dt>' + f + '</dt><dd>' +  v + '</dd>';
-                          }).join('') +
-                        '</dl>' +
-                      suffix;
-                  }
-                  else {
-                    return prefix + value + suffix;
-                  }
-                }).join('') +
-              '</dl>';
-            }).join('') +
+            recurse(result) +
           '</td>' +
         '</tr>'
       }).join('')

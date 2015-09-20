@@ -9,3 +9,7 @@
 .operator div {
   padding: 7px 17px;
 }
+
+dl {
+  margin-left: 20px;
+}
