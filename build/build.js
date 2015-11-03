@@ -513,6 +513,8 @@ jQuery(function ($) {
   }
 
   // Add event handlers.
+  $('[data-toggle="tooltip"]').tooltip();
+
   $(document).on('change', '.field', function () {
     var field = $(this).val();
     var $row = $(this).parents('.row');
