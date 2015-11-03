@@ -222,7 +222,7 @@ jQuery(function ($) {
       }
     });
 
-    $.getJSON('http://whosgotdirt.herokuapp.com/people', {queries: json}, function (data) {
+    $.getJSON('http://whosgotdirt.herokuapp.com/entities', {queries: json}, function (data) {
       render(data);
     });
 
