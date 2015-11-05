@@ -1,0 +1,10 @@
+exclude:
+- components
+- component.json
+- Gemfile
+- Gemfile.lock
+- Gruntfile.js
+- index.js
+- LICENSE
+- Rakefile
+- README.md
