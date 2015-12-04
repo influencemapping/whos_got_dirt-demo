@@ -226,7 +226,7 @@ jQuery(function ($) {
       }
     });
 
-    $.getJSON('http://whosgotdirt.herokuapp.com/entities', {queries: json}, function (data) {
+    $.getJSON('https://whosgotdirt.herokuapp.com/entities', {queries: json}, function (data) {
       render(data);
     });
 
