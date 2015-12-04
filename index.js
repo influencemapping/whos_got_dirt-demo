@@ -180,6 +180,10 @@ jQuery(function ($) {
 
     // Build the query.
     for (var i = 0, l = controls.length; i < l; i += 3) {
+      if (controls[i].name == 'apis') {
+        break;
+      }
+
       var field = controls[i].value;
       var operator = controls[i + 1].value;
       var value = controls[i + 2].value;
