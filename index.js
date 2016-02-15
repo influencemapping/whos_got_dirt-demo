@@ -91,10 +91,10 @@ jQuery(function ($) {
   //
   // @param {Object} data The JSON response.
   function render(data) {
-    var results = data['q0']['result'];
+    var result = data['q0']['result'];
 
-    var html = $.map(results, function (result, i) {
-      return '<tr class="'+ result['@type'] + '" id="result-' + i + '">' +
+    var results = $.map(result, function (result, i) {
+      return '<tr class="'+ result['@type'] + '">' +
         '<td>' +
           result.name +
         '</td>' +
@@ -108,18 +108,34 @@ jQuery(function ($) {
           (result.founding_date || '') +
         '</td>' +
         '<td>' +
-          address(result.contact_details) +
+          (address(result.contact_details) || '') +
         '</td>' +
         '<td>' +
-          '<button type="button" class="btn details">Details</button>' +
+          (link(result.links) || '') +
+        '</td>' +
+        '<td>' +
+          '<button type="button" class="btn" data-toggle="modal"data-target="#result-' + i + '">JSON</button>' +
         '</td>' +
       '</tr>';
+    }).join('');
+
+    var modals = $.map(result, function (result, i) {
+      return '<div class="modal fade" tabindex="-1" role="dialog" id="result-' + i + '">' +
+        '<div class="modal-dialog modal-lg" role="document">' +
+          '<div class="modal-content">' +
+            '<pre>' +
+              JSON.stringify(result, null, '  ') +
+            '</pre>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
     }).join('');
 
     $('#number').html(data['q0']['result'].length);
     $('#count').html(data['q0']['count']);
     $('#results').show();
-    $('#results tbody').html(html);
+    $('#results tbody').html(results);
+    $('#modals').html(modals);
   }
 
   // Returns the address value in the contact details.
@@ -134,8 +150,16 @@ jQuery(function ($) {
         }
       }
     }
-    else {
-      return '';
+  }
+
+  // Returns a link to the last URL in the links.
+  //
+  // @param {Array} links The links.
+  // @return {string} A link to the last URL.
+  function link(links) {
+    if (links) {
+      var url = links[links.length - 1].url;
+      return '<a href="' + url + '">' + url.match(/:\/\/([^/]+)/)[1] + '</a>';
     }
   }
 
@@ -268,7 +292,7 @@ jQuery(function ($) {
 
     $.ajax({
       dataType: 'json',
-      url: 'http://localhost:9292/entities',
+      url: 'https://whosgotdirt.herokuapp.com/entities',
       data: {queries: json},
       success: function (data) {
         $('#loading').css('visibility', 'hidden');
@@ -277,9 +301,7 @@ jQuery(function ($) {
       },
       error: function (xhr, textStatus, errorThrown) {
         $('#loading').css('visibility', 'hidden');
-
         var status = xhr.status + ' ' + errorThrown.replace(/ $/, '');
-
         if (xhr.responseJSON) {
           var messages = xhr.responseJSON['messages'];
           for (var i = 0, l = messages.length; i < l; i++) {
@@ -287,8 +309,11 @@ jQuery(function ($) {
           }
           render_messages(messages);
         }
+        else if (xhr.status) {
+          render_message({message: status});
+        }
         else {
-          render_message(status);
+          render_message({message: 'An unknown error occurred.'});
         }
       }
     });

@@ -13,3 +13,7 @@
 dl {
   margin-left: 20px;
 }
+
+th {
+  white-space: nowrap;
+}
