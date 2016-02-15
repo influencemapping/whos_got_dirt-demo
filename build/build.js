@@ -466,10 +466,25 @@ jQuery(function ($) {
   function render(data) {
     var results = data['q0']['result'];
 
-    var html = $.map(results, function (result) {
-      return '<tr class="'+ result['@type'] + '">' +
+    var html = $.map(results, function (result, i) {
+      return '<tr class="'+ result['@type'] + '" id="result-' + i + '">' +
         '<td>' +
-          recurse(result) +
+          result.name +
+        '</td>' +
+        '<td>' +
+          (result.country_code || '') +
+        '</td>' +
+        '<td>' +
+          (result.classification || '') +
+        '</td>' +
+        '<td>' +
+          (result.founding_date || '') +
+        '</td>' +
+        '<td>' +
+          address(result.contact_details) +
+        '</td>' +
+        '<td>' +
+          '<button type="button" class="btn details">Details</button>' +
         '</td>' +
       '</tr>';
     }).join('');
@@ -480,36 +495,51 @@ jQuery(function ($) {
     $('#results tbody').html(html);
   }
 
-  // Renders an arbitrary object or primitive.
+  // Returns the address value in the contact details.
   //
-  // @param {Array.,Object,boolean,number,string} data an object or primitive
-  function recurse(data) {
-    if (Object.prototype.toString.call(data) === '[object Array]') {
-      return $.map(data, function (item) {
-        return recurse(item);
-      }).join('');
-    }
-    else if (typeof data === 'object') {
-      // Link.
-      if (data.url && data.note) {
-        return '<a href="' + data.url + '">' + data.note + '</a>';
-      }
-      // Identifier.
-      else if (data.identifier && data.scheme) {
-        return data.identifier + '(' + data.scheme + ')';
-      }
-      else {
-        return '<dl>' +
-          $.map(data, function (value, field) {
-            return '<dt>' + field + '</dt>' +
-              '<dd>' + recurse(value) + '</dd>';
-          }).join('') +
-        '</dl>';
+  // @param {Array} contact_details The contact details.
+  // @return {string} The address value.
+  function address(contact_details) {
+    if (contact_details) {
+      for (var i = 0, l = contact_details.length; i < l; i++) {
+        if (contact_details[i].type == 'address') {
+          return contact_details[i].value;
+        }
       }
     }
     else {
-      return data;
+      return '';
     }
+  }
+
+  // Renders messages.
+  //
+  // @param {Array} messages Messages.
+  function render_messages(messages) {
+    if (messages.length) {
+      for (var i = 0, l = messages.length; i < l; i++) {
+        render_message(messages[i]);
+      }
+    }
+  }
+
+  // Renders a message.
+  //
+  // @param {Object} message A message.
+  function render_message(message) {
+    $('#messages').append(
+      '<div class="alert alert-warning">' +
+        (message.info ?
+          '<p>' +
+            'An error occurred when requesting <code>' + message.info.url + '</code>:' +
+          '</p>' : '') +
+        '<p>' +
+          message.message +
+          (message.status ?
+            ' (' + message.status + ')' : '') +
+        '</p>' +
+      '</div>'
+    );
   }
 
   // Add event handlers.
@@ -551,9 +581,12 @@ jQuery(function ($) {
     var query = {type: 'Person'};
     var membership = {};
 
+    $('#loading').css('visibility', 'visible').html('<img src="build/ajax-loader.gif" width="16" height="16" alt="">');
+    $('.alert-warning').remove();
+
     // Build the query.
     for (var i = 0, l = controls.length; i < l; i += 3) {
-      if (controls[i].name == 'apis') {
+      if (controls[i].name == 'endpoints') {
         break;
       }
 
@@ -592,15 +625,45 @@ jQuery(function ($) {
       query.memberships = [membership];
     }
 
+    // Collect endpoints.
+    var endpoints = [];
+    $('input[name="endpoints"]:checked').each(function () {
+      endpoints.push($(this).val());
+    });
+
     // Send the request.
     var json = JSON.stringify({
       q0: {
-        query: query
+        query: query,
+        endpoints: endpoints
       }
     });
 
-    $.getJSON('https://whosgotdirt.herokuapp.com/entities', {queries: json}, function (data) {
-      render(data);
+    $.ajax({
+      dataType: 'json',
+      url: 'http://localhost:9292/entities',
+      data: {queries: json},
+      success: function (data) {
+        $('#loading').css('visibility', 'hidden');
+        render_messages(data['q0']['messages']);
+        render(data);
+      },
+      error: function (xhr, textStatus, errorThrown) {
+        $('#loading').css('visibility', 'hidden');
+
+        var status = xhr.status + ' ' + errorThrown.replace(/ $/, '');
+
+        if (xhr.responseJSON) {
+          var messages = xhr.responseJSON['messages'];
+          for (var i = 0, l = messages.length; i < l; i++) {
+            messages[i].message += ' (' + status + ')';
+          }
+          render_messages(messages);
+        }
+        else {
+          render_message(status);
+        }
+      }
     });
 
     event.preventDefault();
@@ -610,15 +673,6 @@ jQuery(function ($) {
   $('#results').hide();
   addField();
 });
-
-var fields = {
-  'name': 'Name',
-  'birth_date': 'Birth date',
-  'role': 'Role',
-  'address': 'Address',
-  'inactive': 'Inactive',
-  'jurisdiction_code': 'Jurisdiction'
-};
 
 var operators = {
   '=': 'is exactly',
@@ -630,26 +684,34 @@ var operators = {
   '|=': 'is one of'
 }
 
+var fields = {
+  'name': 'Name',
+  'country_code': 'Country',
+  'classification': 'Classification',
+  'founding_date': 'Founding date',
+  'address': 'Address',
+  'limit': 'Number of results per API'
+};
+
 var field_operators = {
   'name': ['~='],
-  'birth_date': ['=', '<', '<=', '>=', '>'],
-  'role': ['='],
+  'country_code': ['=', '|='],
+  'classification': ['=', '|='],
+  'founding_date': ['=', '>=', '>', '<', '<='],
   'address': ['~='],
-  'inactive': ['='],
-  'jurisdiction_code': ['=', '|=']
+  'limit': ['=']
 };
 
 var field_types = {
-  'limit': 'integer',
-  'inactive': 'boolean'
+  'limit': 'integer'
 };
 
 var field_formats = {
-  'birth_date': 'date'
+  'founding_date': 'date'
 };
 
 var field_valid_values = {
-  'jurisdiction_code': [
+  'country_code': [
     ["af", "Afghanistan"],
     ["ax", "ÅLand Islands"],
     ["al", "Albania"],
