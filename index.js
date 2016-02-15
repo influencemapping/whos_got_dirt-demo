@@ -193,47 +193,13 @@ jQuery(function ($) {
     );
   }
 
-  // Add event handlers.
-  $('[data-toggle="tooltip"]').tooltip();
-
-  $(document).on('change', '.field', function () {
-    var field = $(this).val();
-    var $row = $(this).parents('.row');
-    var $value = $(this).parents('.row').find('.value');
-    var value = $value.find('input, select').val();
-
-    $row.find('.operator').html(operatorTemplate(field));
-    $value.html(valueTemplate(field, field_operators[field][0], value));
-    $row.find('.date').datepicker();
-  });
-
-  $(document).on('change', '.operator select', function () {
-    var operator = $(this).val();
-    var field = $(this).parents('.row').find('.field').val();
-    var $value = $(this).parents('.row').find('.value');
-    var value = $value.find('input, select').val();
-
-    $value.html(valueTemplate(field, operator, value));
-    if (operator === '|=') {
-      $value.append('<span class="help-block">The "is one of" operator accepts a pipe-separated list: for example, <kbd>gb|ie</kbd>.</span>');
-    }
-  });
-
-  $(document).on('click', '.remove', function () {
-    $(this).parents('.row').remove();
-  });
-
-  $('#add').click(function () {
-    addField();
-  });
-
-  $('#form').submit(function (event) {
+  // Returns the JSON payload to send to the API.
+  //
+  // @return {String} The JSON payload.
+  function payload() {
     var controls = $(this).serializeArray();
     var query = {type: 'Person'};
     var membership = {};
-
-    $('#loading').css('visibility', 'visible').html('<img src="build/ajax-loader.gif" width="16" height="16" alt="">');
-    $('.alert-warning').remove();
 
     // Build the query.
     for (var i = 0, l = controls.length; i < l; i += 3) {
@@ -282,18 +248,62 @@ jQuery(function ($) {
       endpoints.push($(this).val());
     });
 
-    // Send the request.
-    var json = JSON.stringify({
+    // Prepare the payload.
+    return JSON.stringify({
       q0: {
         query: query,
         endpoints: endpoints
       }
     });
+  }
 
+  // Add event handlers.
+  $('[data-toggle="tooltip"]').tooltip();
+
+  $(document).on('change', '.field', function () {
+    var field = $(this).val();
+    var $row = $(this).parents('.row');
+    var $value = $(this).parents('.row').find('.value');
+    var value = $value.find('input, select').val();
+
+    $row.find('.operator').html(operatorTemplate(field));
+    $value.html(valueTemplate(field, field_operators[field][0], value));
+    $row.find('.date').datepicker();
+  });
+
+  $(document).on('change', '.operator select', function () {
+    var operator = $(this).val();
+    var field = $(this).parents('.row').find('.field').val();
+    var $value = $(this).parents('.row').find('.value');
+    var value = $value.find('input, select').val();
+
+    $value.html(valueTemplate(field, operator, value));
+    if (operator === '|=') {
+      $value.append('<span class="help-block">The "is one of" operator accepts a pipe-separated list: for example, <kbd>gb|ie</kbd>.</span>');
+    }
+  });
+
+  $(document).on('click', '.remove', function () {
+    $(this).parents('.row').remove();
+  });
+
+  $('#add').click(function () {
+    addField();
+  });
+
+  $('#form').submit(function () {
+    $('#queries').val(payload());
+  });
+
+  $('#submit').click(function () {
+    $('#loading').css('visibility', 'visible').html('<img src="build/ajax-loader.gif" width="16" height="16" alt="">');
+    $('.alert-warning').remove();
+
+    // Send the request.
     $.ajax({
       dataType: 'json',
       url: 'https://whosgotdirt.herokuapp.com/entities',
-      data: {queries: json},
+      data: {queries: payload()},
       success: function (data) {
         $('#loading').css('visibility', 'hidden');
         render_messages(data['q0']['messages']);
@@ -317,8 +327,6 @@ jQuery(function ($) {
         }
       }
     });
-
-    event.preventDefault();
   });
 
   // Setup the page.

@@ -19,7 +19,7 @@
 
   <p>This demo queries only <strong>entities</strong> (people and organizations) and exposes only 5 filters for entities, not all 25 implemented by the <i>Who's got dirt?</i> API and its supported APIs. In addition to entities, the <i>Who's got dirt?</i>1 API supports <strong>relations</strong> between entities (for example, a person holding an office in an organization) and <strong>lists</strong> of entities (for example, a corporate grouping).</p>
 
-  <form id="form">
+  <form action="https://whosgotdirt-proxy.herokuapp.com/entities.csv" method="post" id="form">
     <h2>Select your filters to search for entities</h2>
 
     <div id="filters">
@@ -101,7 +101,9 @@
       </div>
     </div>
 
-    <button type="submit" class="btn btn-default">Submit query</button>
+    <input type="hidden" name="queries" id="queries">
+    <button type="button" class="btn btn-default" id="submit">Submit query</button>
+    <button type="submit" class="btn">Download CSV</button>
     <span id="loading"></span>
   </form>
 

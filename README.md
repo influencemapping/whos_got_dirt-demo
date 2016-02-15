@@ -2,7 +2,7 @@
 
 This demo offers a simple query builder and a simple HTML render of the JSON response from the [Who's got dirt? API](https://github.com/influencemapping/whos_got_dirt-server/).
 
-[Try it.](http://influencemapping.github.io/whos_got_dirt-demo/)
+[Try it!](http://influencemapping.github.io/whos_got_dirt-demo/)
 
 ## Development
 
