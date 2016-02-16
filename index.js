@@ -197,7 +197,7 @@ jQuery(function ($) {
   //
   // @return {String} The JSON payload.
   function payload() {
-    var controls = $(this).serializeArray();
+    var controls = $('#form').serializeArray();
     var query = {type: 'Person'};
     var membership = {};
 
