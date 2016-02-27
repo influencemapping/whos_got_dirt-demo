@@ -203,7 +203,7 @@ jQuery(function ($) {
 
     // Build the query.
     for (var i = 0, l = controls.length; i < l; i += 3) {
-      if (controls[i].name == 'endpoints') {
+      if (controls[i].name == 'endpoints' || controls[i].name == 'page') {
         break;
       }
 
@@ -242,6 +242,9 @@ jQuery(function ($) {
       query.memberships = [membership];
     }
 
+    // Add page.
+    query.page = $('input[name="page"]').val();
+
     // Collect endpoints.
     var endpoints = [];
     $('input[name="endpoints"]:checked').each(function () {
@@ -255,6 +258,17 @@ jQuery(function ($) {
         endpoints: endpoints
       }
     });
+  }
+
+  // Changes the page.
+  //
+  // @param {number} change `1` for the next page or `-1` for the previous page.
+  function paginate(change) {
+    var $page = $('input[name="page"]');
+    var page = parseInt($page.val()) + change;
+    $page.val(page);
+    $('#submit').click();
+    $('#page-previous').toggleClass('disabled', page == 1);
   }
 
   // Add event handlers.
@@ -289,6 +303,15 @@ jQuery(function ($) {
 
   $('#add').click(function () {
     addField();
+  });
+
+  $('#page-next').click(function (event) {
+    paginate(1);
+    event.preventDefault();
+  });
+  $('#page-previous').click(function (event) {
+    paginate(-1);
+    event.preventDefault();
   });
 
   $('#form').submit(function () {
@@ -331,6 +354,7 @@ jQuery(function ($) {
 
   // Setup the page.
   $('#results').hide();
+  $('#page-previous').addClass('disabled');
   addField();
 });
 

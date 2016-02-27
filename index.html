@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="x-ua-compatible" content="ie=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Who's Got Dirt API Demo</title>
+<title>Search for entities across 5 influence data APIs - Who's Got Dirt API Demo</title>
 <meta name="description" content="A demo client of the Who's Got Dirt API">
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/css/bootstrap-datepicker.standalone.min.css">
@@ -13,7 +13,7 @@
 <body>
 
 <div class="container-fluid">
-  <h1>Who's Got Dirt? Demo</h1>
+  <h1>Search for entities across 5 influence data APIs</h1>
 
   <p>This is a demonstration of the <a href="https://influencemapping.github.io/whos_got_dirt-server/"><i>Who's got dirt?</i> API</a>. The <i>Who's got dirt?</i> API provides a single access point to multiple APIs of influence data on the web. It proxies requests to the supported APIs, so that users only need to learn a single request format and a single response format. <a href="https://influencemapping.github.io/whos_got_dirt-server/">Read the documentation</a> to learn more about the API and how you can use it in your own projects.</p>
 
@@ -30,6 +30,8 @@
         <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Add another filter
       </button>
     </div>
+
+    <input type="hidden" name="page" value="1">
 
     <h2>Select the APIs to query</h2>
 
@@ -112,6 +114,7 @@
 
   <div class="panel panel-default" id="results">
     <div class="panel-heading"><span id="number"></span> of <span id="count"></span> results</div>
+    <div class="panel-body">
       <table class="table table-bordered table-striped">
         <thead>
           <tr>
@@ -127,6 +130,11 @@
         <tbody>
         </tbody>
       </table>
+
+      <p>
+        <a href="#" class="btn btn-default" rel="prev" id="page-previous">Previous</a>
+        <a href="#" class="btn btn-default" rel="next" id="page-next">Next</a>
+      </p>
     </div>
   </div>
 
