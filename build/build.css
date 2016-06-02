@@ -6,14 +6,10 @@
   margin-bottom: 15px;
 }
 
-.operator div {
+#filters .operator div {
   padding: 7px 17px;
 }
 
-dl {
-  margin-left: 20px;
-}
-
-th {
+#results th {
   white-space: nowrap;
 }
